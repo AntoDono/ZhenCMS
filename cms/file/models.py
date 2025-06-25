@@ -30,6 +30,9 @@ class File(models.Model):
     # Sharing control
     shareable = models.BooleanField(default=False, help_text="Whether this file can be accessed via API")
     
+    # View tracking
+    views = models.PositiveIntegerField(default=0, help_text="Number of times this file has been viewed")
+    
     def save(self, *args, **kwargs):
         # Auto-populate fields when file is uploaded
         if self.file:
@@ -89,6 +92,11 @@ class File(models.Model):
         """Override delete to also remove file from storage"""
         self.delete_file()
         super().delete(*args, **kwargs)
+    
+    def increment_views(self):
+        """Increment the view count for this file"""
+        self.views += 1
+        self.save(update_fields=['views'])
     
     @property
     def file_extension(self):

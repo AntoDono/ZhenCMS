@@ -38,10 +38,10 @@
 
       <!-- Animated subtitle -->
       <div class="text-base sm:text-lg md:text-xl lg:text-2xl text-blue-700 mb-8 sm:mb-12 animate-fade-in-up animation-delay-1200 max-w-3xl mx-auto leading-relaxed space-y-2">
-        <p class="animate-typewriter">
+        <p class="animate-fade-in-up animation-delay-1500">
           Experience the future of cloud storage with seamless file management,
         </p>
-        <p class="animate-typewriter animation-delay-1800">
+        <p class="animate-fade-in-up animation-delay-1800">
           secure sharing, and lightning-fast access to your digital world.
         </p>
       </div>
@@ -300,15 +300,6 @@ useHead({
   }
 }
 
-@keyframes typewriter {
-  from {
-    width: 0;
-  }
-  to {
-    width: 100%;
-  }
-}
-
 .animate-blob {
   animation: blob 8s infinite;
 }
@@ -341,24 +332,6 @@ useHead({
 
 .animate-heartbeat {
   animation: heartbeat 2s ease-in-out infinite;
-}
-
-.animate-typewriter {
-  overflow: hidden;
-  white-space: nowrap;
-  animation: typewriter 3s steps(60, end) forwards;
-  animation-delay: 1.5s;
-  width: 0;
-}
-
-/* Mobile-specific adjustments */
-@media (max-width: 640px) {
-  .animate-typewriter {
-    white-space: normal;
-    overflow: visible;
-    animation: fade-in-up 1s ease-out forwards;
-    width: auto;
-  }
 }
 
 /* Animation delays */

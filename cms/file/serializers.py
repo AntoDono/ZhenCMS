@@ -44,6 +44,7 @@ class FileSerializer(serializers.ModelSerializer):
             'folder',
             'root_folder',
             'shareable',
+            'views',
         ]
         read_only_fields = [
             'id',

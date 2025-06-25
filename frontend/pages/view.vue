@@ -87,10 +87,18 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-800 to-sky-700 bg-clip-text text-transparent break-words">{{ fileData.name }}{{ fileData.file_extension }}</h1>
-                                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-blue-600 mt-2">
+                                <div class="flex flex-row flex-wrap sm:items-center gap-2 sm:gap-4 text-sm text-blue-600 mt-2">
                                     <span class="px-2 py-1 bg-blue-100 rounded-full w-fit">{{ fileData.formatted_size }}</span>
                                     <span class="hidden sm:inline">•</span>
                                     <span class="px-2 py-1 bg-sky-100 rounded-full w-fit">{{ fileData.content_type.toUpperCase() }}</span>
+                                    <span class="hidden sm:inline">•</span>
+                                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full w-fit flex items-center space-x-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        <span>{{ formatViews(fileData.views) }}</span>
+                                    </span>
                                     <span class="hidden sm:inline">•</span>
                                     <span class="w-fit">{{ formatDate(fileData.uploaded_at) }}</span>
                                 </div>
@@ -256,6 +264,16 @@
                                 <span class="text-sm font-semibold text-blue-600 uppercase tracking-wide">Content Type</span>
                                 <p class="text-blue-900 font-medium text-lg mt-1">{{ fileData.content_type }}</p>
                             </div>
+                            <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
+                                <span class="text-sm font-semibold text-green-600 uppercase tracking-wide">Views</span>
+                                <p class="text-green-900 font-medium text-lg mt-1 flex items-center space-x-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    <span>{{ formatViews(fileData.views) }}</span>
+                                </p>
+                            </div>
                         </div>
                         <div class="space-y-6">
                             <div class="p-4 bg-gradient-to-r from-sky-50 to-blue-50 rounded-xl border border-sky-100">
@@ -350,6 +368,9 @@ async function fetchFileData() {
 
         fileData.value = response
 
+        // Update head metadata after data is fetched
+        updateHeadMetadata()
+
         // If it's a text file, fetch the content
         if (isTextFile(response)) {
             await fetchTextContent()
@@ -382,14 +403,29 @@ function getFileUrl(filePath) {
 
 function downloadFile() {
     if (!fileData.value) return
-
-    const link = document.createElement('a')
-    link.href = getFileUrl(fileData.value.file_url)
-    link.download = `${fileData.value.name}${fileData.value.file_extension}`
-    link.target = '_blank'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    
+    const downloadUrl = `${config.public.apiBase}/file/download/${fileData.value.uuid}/`
+    const filename = `${fileData.value.name}${fileData.value.file_extension}`
+    
+    // Check if we're on iOS/mobile Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    
+    console.log("DOWNLOADING FILE")
+    
+    if (isIOS || (isSafari && 'ontouchstart' in window)) {
+        // On iOS, open in new tab which will trigger the share sheet
+        window.open(downloadUrl, '_blank')
+    } else {
+        // Standard download approach for desktop/Android
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = filename
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }
 }
 
 async function copyShareLink() {
@@ -419,6 +455,14 @@ function formatDate(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     })
+}
+
+function formatViews(viewCount) {
+    if (viewCount === 0) return '0 views'
+    if (viewCount === 1) return '1 view'
+    if (viewCount < 1000) return `${viewCount} views`
+    if (viewCount < 1000000) return `${(viewCount / 1000).toFixed(1)}K views`
+    return `${(viewCount / 1000000).toFixed(1)}M views`
 }
 
 // Text file handling functions
@@ -606,23 +650,40 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
-// SEO and meta data for better embeds
+// Function to update head metadata after data is fetched
+function updateHeadMetadata() {
+    if (!fileData.value) return
+    
+    const title = `${fileData.value.name} - ZhenCMS`
+    const description = `View and download ${fileData.value.name} (${fileData.value.formatted_size}) - Secure cloud storage with ZhenCMS`
+    const imageUrl = fileData.value.is_image ? getFileUrl(fileData.value.file_url) : '/logo.png'
+    const imageAlt = fileData.value.is_image ? fileData.value.name : 'ZhenCMS Logo'
+    const twitterCard = fileData.value.is_image ? 'summary_large_image' : 'summary'
+    
+    useHead({
+        title,
+        meta: [
+            { name: 'description', content: description },
+            { property: 'og:title', content: title },
+            { property: 'og:description', content: description },
+            { property: 'og:image', content: imageUrl },
+            { property: 'og:image:alt', content: imageAlt },
+            { name: 'twitter:title', content: title },
+            { name: 'twitter:description', content: description },
+            { name: 'twitter:card', content: twitterCard },
+            { name: 'twitter:image', content: imageUrl },
+            { name: 'twitter:image:alt', content: imageAlt }
+        ]
+    })
+}
+
+// SEO and meta data for better embeds - Initial setup with fallback values
 useHead({
-    title: computed(() => {
-        if (fileData.value) {
-            return `${fileData.value.name} - ZhenCMS`
-        }
-        return 'View File - ZhenCMS'
-    }),
+    title: 'View File - ZhenCMS',
     meta: [
         {
             name: 'description',
-            content: computed(() => {
-                if (fileData.value) {
-                    return `View and download ${fileData.value.name} (${fileData.value.formatted_size}) - Secure cloud storage with ZhenCMS`
-                }
-                return 'View and download files securely with ZhenCMS - Modern cloud storage platform'
-            })
+            content: 'View and download files securely with ZhenCMS - Modern cloud storage platform'
         },
         {
             name: 'keywords',
@@ -635,21 +696,11 @@ useHead({
         // Open Graph meta tags for better social media embeds
         {
             property: 'og:title',
-            content: computed(() => {
-                if (fileData.value) {
-                    return `${fileData.value.name} - ZhenCMS`
-                }
-                return 'View File - ZhenCMS'
-            })
+            content: 'View File - ZhenCMS'
         },
         {
             property: 'og:description',
-            content: computed(() => {
-                if (fileData.value) {
-                    return `View and download ${fileData.value.name} (${fileData.value.formatted_size}) - Secure cloud storage with ZhenCMS`
-                }
-                return 'View and download files securely with ZhenCMS - Modern cloud storage platform'
-            })
+            content: 'View and download files securely with ZhenCMS - Modern cloud storage platform'
         },
         {
             property: 'og:type',
@@ -657,21 +708,11 @@ useHead({
         },
         {
             property: 'og:image',
-            content: computed(() => {
-                if (fileData.value && fileData.value.is_image) {
-                    return getFileUrl(fileData.value.file_url)
-                }
-                return '/logo.png'
-            })
+            content: '/logo.png'
         },
         {
             property: 'og:image:alt',
-            content: computed(() => {
-                if (fileData.value && fileData.value.is_image) {
-                    return fileData.value.name
-                }
-                return 'ZhenCMS Logo'
-            })
+            content: 'ZhenCMS Logo'
         },
         {
             property: 'og:site_name',
@@ -680,48 +721,23 @@ useHead({
         // Twitter Card meta tags
         {
             name: 'twitter:card',
-            content: computed(() => {
-                if (fileData.value && fileData.value.is_image) {
-                    return 'summary_large_image'
-                }
-                return 'summary'
-            })
+            content: 'summary'
         },
         {
             name: 'twitter:title',
-            content: computed(() => {
-                if (fileData.value) {
-                    return `${fileData.value.name} - ZhenCMS`
-                }
-                return 'View File - ZhenCMS'
-            })
+            content: 'View File - ZhenCMS'
         },
         {
             name: 'twitter:description',
-            content: computed(() => {
-                if (fileData.value) {
-                    return `View and download ${fileData.value.name} (${fileData.value.formatted_size}) - Secure cloud storage with ZhenCMS`
-                }
-                return 'View and download files securely with ZhenCMS - Modern cloud storage platform'
-            })
+            content: 'View and download files securely with ZhenCMS - Modern cloud storage platform'
         },
         {
             name: 'twitter:image',
-            content: computed(() => {
-                if (fileData.value && fileData.value.is_image) {
-                    return getFileUrl(fileData.value.file_url)
-                }
-                return '/logo.png'
-            })
+            content: '/logo.png'
         },
         {
             name: 'twitter:image:alt',
-            content: computed(() => {
-                if (fileData.value && fileData.value.is_image) {
-                    return fileData.value.name
-                }
-                return 'ZhenCMS Logo'
-            })
+            content: 'ZhenCMS Logo'
         },
         // Additional meta tags
         {

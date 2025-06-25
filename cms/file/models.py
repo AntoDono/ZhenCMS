@@ -17,7 +17,7 @@ def file_upload_path(instance, filename):
 
 class File(models.Model):
     name = models.CharField(max_length=255)
-    uuid = models.UUIDField(default=uuid4, editable=False, unique=True)
+    uuid = models.UUIDField(default=uuid4, editable=True, unique=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     size_in_bytes = models.BigIntegerField(default=0)
     folder = models.ForeignKey(Folder, on_delete=models.CASCADE, null=True, blank=True)

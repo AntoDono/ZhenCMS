@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-^k!19wfabllcwze6e=mnfio@omowmeb$0vww3vsv8^p%fu=a@u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["cms.antodono.com", "localhost", "127.0.0.1", "cms-api.antodono.com"]
 
 
 # Application definition
@@ -159,6 +159,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
     "https://cms.antodono.com",
+    "https://cms-api.antodono.com", 
 ]
 
 # Allow all origins during development only
@@ -186,5 +187,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    "https://cms.antodono.com",
+    "https://cms.antodono.com", 
+    "https://cms-api.antodono.com",
 ]

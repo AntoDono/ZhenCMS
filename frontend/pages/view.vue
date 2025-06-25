@@ -85,14 +85,14 @@
                                     </path>
                                 </svg>
                             </div>
-                            <div>
-                                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-800 to-sky-700 bg-clip-text text-transparent">{{ fileData.name }}</h1>
-                                <div class="flex items-center space-x-4 text-sm text-blue-600 mt-2">
-                                    <span class="px-2 py-1 bg-blue-100 rounded-full">{{ fileData.formatted_size }}</span>
-                                    <span>•</span>
-                                    <span class="px-2 py-1 bg-sky-100 rounded-full">{{ fileData.content_type.toUpperCase() }}</span>
-                                    <span>•</span>
-                                    <span>{{ formatDate(fileData.uploaded_at) }}</span>
+                            <div class="min-w-0 flex-1">
+                                <h1 class="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-800 to-sky-700 bg-clip-text text-transparent break-words">{{ fileData.name }}{{ fileData.file_extension }}</h1>
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-blue-600 mt-2">
+                                    <span class="px-2 py-1 bg-blue-100 rounded-full w-fit">{{ fileData.formatted_size }}</span>
+                                    <span class="hidden sm:inline">•</span>
+                                    <span class="px-2 py-1 bg-sky-100 rounded-full w-fit">{{ fileData.content_type.toUpperCase() }}</span>
+                                    <span class="hidden sm:inline">•</span>
+                                    <span class="w-fit">{{ formatDate(fileData.uploaded_at) }}</span>
                                 </div>
                             </div>
                         </div>

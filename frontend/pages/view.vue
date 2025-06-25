@@ -138,6 +138,84 @@
                         </iframe>
                     </div>
 
+                    <!-- Text file viewer (JSON, TXT, etc.) -->
+                    <div v-else-if="isTextFile(fileData)" class="relative">
+                        <!-- Loading state for text content -->
+                        <div v-if="loadingTextContent" class="flex justify-center items-center py-20">
+                            <div class="relative">
+                                <div class="animate-spin rounded-full h-12 w-12 border-4 border-blue-200"></div>
+                                <div class="animate-spin rounded-full h-12 w-12 border-4 border-sky-500 border-t-transparent absolute top-0 left-0"></div>
+                            </div>
+                            <span class="ml-4 text-blue-600 font-medium">Loading content...</span>
+                        </div>
+
+                        <!-- Text content error -->
+                        <div v-else-if="textContentError" class="p-8 text-center">
+                            <div class="w-20 h-20 bg-gradient-to-br from-red-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                <svg class="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-red-800 mb-3">Cannot load content</h3>
+                            <p class="text-red-600 mb-6">{{ textContentError }}</p>
+                            <button @click="downloadFile"
+                                class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-600 text-white rounded-xl hover:from-blue-700 hover:to-sky-700 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg font-medium">
+                                Download File
+                            </button>
+                        </div>
+
+                        <!-- Text content display -->
+                        <div v-else-if="textContent" class="relative">
+                                                         <!-- Text viewer header -->
+                             <div class="bg-gradient-to-r from-blue-50 to-sky-50 border-b border-blue-100 px-6 py-4">
+                                 <div class="flex items-center justify-between mb-2">
+                                     <div class="flex items-center space-x-3">
+                                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                             </path>
+                                         </svg>
+                                         <h3 class="font-semibold text-blue-800">{{ getFileTypeLabel(fileData) }} Preview</h3>
+                                     </div>
+                                     <div class="flex items-center space-x-2">
+                                         <button @click="copyTextContent"
+                                             class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors duration-200 text-sm font-medium">
+                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                     d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                                 </path>
+                                             </svg>
+                                             {{ textCopied ? 'Copied!' : 'Copy' }}
+                                         </button>
+                                         <span class="text-sm text-blue-600">{{ formatFileSize(textContent.length) }} characters</span>
+                                     </div>
+                                 </div>
+                                 
+                                 <!-- Partial content warning -->
+                                 <div v-if="isPartialContent" class="flex items-center space-x-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                     <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z">
+                                         </path>
+                                     </svg>
+                                     <span>
+                                         Showing first {{ formatFileSize(textContent.length) }} of {{ fileData.formatted_size }} - 
+                                         <button @click="downloadFile" class="underline hover:no-underline font-medium">
+                                             download complete file
+                                         </button>
+                                     </span>
+                                 </div>
+                             </div>
+
+                            <!-- Text content area -->
+                            <div class="relative" style="height: 60vh;">
+                                <pre class="h-full w-full p-6 overflow-auto text-sm font-mono bg-gradient-to-br from-gray-50 to-blue-50 text-gray-800 leading-relaxed whitespace-pre-wrap break-words border-0 resize-none focus:outline-none"><code :class="getLanguageClass(fileData)">{{ formattedTextContent }}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Generic file viewer -->
                     <div v-else class="p-16 text-center">
                         <div class="w-32 h-32 bg-gradient-to-br from-blue-100 to-sky-100 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg">
@@ -208,7 +286,9 @@
                 <svg class="w-6 h-6 mr-3 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                <span class="font-medium">Link copied to clipboard!</span>
+                <span class="font-medium">
+                    {{ isPartialContent && textCopied ? 'Partial content copied to clipboard!' : 'Link copied to clipboard!' }}
+                </span>
             </div>
         </div>
     </div>
@@ -226,6 +306,13 @@ const errorMessage = ref('')
 const fileData = ref(null)
 const copied = ref(false)
 const showToast = ref(false)
+
+// Text file preview data
+const textContent = ref('')
+const loadingTextContent = ref(false)
+const textContentError = ref('')
+const textCopied = ref(false)
+const isPartialContent = ref(false)
 
 // Get file ID from query params
 const fileId = computed(() => route.query.id)
@@ -262,6 +349,11 @@ async function fetchFileData() {
         })
 
         fileData.value = response
+
+        // If it's a text file, fetch the content
+        if (isTextFile(response)) {
+            await fetchTextContent()
+        }
     } catch (err) {
         console.error('Error fetching file:', err)
 
@@ -327,6 +419,191 @@ function formatDate(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     })
+}
+
+// Text file handling functions
+function isTextFile(file) {
+    if (!file) return false
+    
+    const textExtensions = ['.txt', '.json', '.js', '.ts', '.html', '.css', '.xml', '.csv', '.md', '.py', '.java', '.cpp', '.c', '.h', '.php', '.rb', '.go', '.rs', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.log', '.sql', '.sh', '.bat', '.ps1']
+    const textContentTypes = ['text/', 'application/json', 'application/javascript', 'application/xml', 'application/csv']
+    
+    // Check by file extension
+    if (file.file_extension && textExtensions.includes(file.file_extension.toLowerCase())) {
+        return true
+    }
+    
+    // Check by content type
+    if (file.content_type) {
+        return textContentTypes.some(type => file.content_type.toLowerCase().startsWith(type))
+    }
+    
+    return false
+}
+
+async function fetchTextContent() {
+    if (!fileData.value || !isTextFile(fileData.value)) return
+    
+    try {
+        loadingTextContent.value = true
+        textContentError.value = ''
+        
+        const response = await fetch(getFileUrl(fileData.value.file_url))
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        // For large files (>1MB), only load the first 500KB
+        const maxPreviewSize = 500 * 1024 // 500KB
+        const isLargeFile = fileData.value.size_in_bytes > 1024 * 1024 // 1MB
+        
+        if (isLargeFile) {
+            // Use range request to get only the first part of the file
+            const partialResponse = await fetch(getFileUrl(fileData.value.file_url), {
+                headers: {
+                    'Range': `bytes=0-${maxPreviewSize - 1}`
+                }
+            })
+            
+            if (partialResponse.ok || partialResponse.status === 206) {
+                const text = await partialResponse.text()
+                textContent.value = text
+                isPartialContent.value = true
+                return
+            }
+        }
+        
+        // For smaller files or if range request fails, load the entire file
+        const text = await response.text()
+        
+        // If the full content is too large for display, truncate it
+        if (text.length > maxPreviewSize) {
+            textContent.value = text.substring(0, maxPreviewSize)
+            isPartialContent.value = true
+        } else {
+            textContent.value = text
+            isPartialContent.value = false
+        }
+        
+    } catch (err) {
+        console.error('Error fetching text content:', err)
+        textContentError.value = 'Failed to load file content. The file might be corrupted or inaccessible.'
+    } finally {
+        loadingTextContent.value = false
+    }
+}
+
+function getFileTypeLabel(file) {
+    if (!file) return 'File'
+    
+    const ext = file.file_extension?.toLowerCase()
+    switch (ext) {
+        case '.json': return 'JSON'
+        case '.js': return 'JavaScript'
+        case '.ts': return 'TypeScript'
+        case '.html': return 'HTML'
+        case '.css': return 'CSS'
+        case '.xml': return 'XML'
+        case '.csv': return 'CSV'
+        case '.md': return 'Markdown'
+        case '.py': return 'Python'
+        case '.java': return 'Java'
+        case '.cpp': case '.cc': case '.cxx': return 'C++'
+        case '.c': return 'C'
+        case '.h': return 'Header'
+        case '.php': return 'PHP'
+        case '.rb': return 'Ruby'
+        case '.go': return 'Go'
+        case '.rs': return 'Rust'
+        case '.yaml': case '.yml': return 'YAML'
+        case '.toml': return 'TOML'
+        case '.ini': case '.cfg': case '.conf': return 'Configuration'
+        case '.log': return 'Log'
+        case '.sql': return 'SQL'
+        case '.sh': return 'Shell Script'
+        case '.bat': return 'Batch'
+        case '.ps1': return 'PowerShell'
+        case '.txt': return 'Text'
+        default: return 'Text'
+    }
+}
+
+function getLanguageClass(file) {
+    if (!file) return ''
+    
+    const ext = file.file_extension?.toLowerCase()
+    switch (ext) {
+        case '.json': return 'language-json'
+        case '.js': return 'language-javascript'
+        case '.ts': return 'language-typescript'
+        case '.html': return 'language-html'
+        case '.css': return 'language-css'
+        case '.xml': return 'language-xml'
+        case '.md': return 'language-markdown'
+        case '.py': return 'language-python'
+        case '.java': return 'language-java'
+        case '.cpp': case '.cc': case '.cxx': return 'language-cpp'
+        case '.c': return 'language-c'
+        case '.php': return 'language-php'
+        case '.rb': return 'language-ruby'
+        case '.go': return 'language-go'
+        case '.rs': return 'language-rust'
+        case '.yaml': case '.yml': return 'language-yaml'
+        case '.sql': return 'language-sql'
+        case '.sh': return 'language-bash'
+        default: return 'language-text'
+    }
+}
+
+const formattedTextContent = computed(() => {
+    if (!textContent.value) return ''
+    
+    // For JSON files, try to format them nicely
+    if (fileData.value?.file_extension?.toLowerCase() === '.json') {
+        try {
+            const parsed = JSON.parse(textContent.value)
+            return JSON.stringify(parsed, null, 2)
+        } catch (e) {
+            // If it's not valid JSON, just return as-is
+            return textContent.value
+        }
+    }
+    
+    return textContent.value
+})
+
+async function copyTextContent() {
+    if (!textContent.value) return
+    
+    try {
+        await navigator.clipboard.writeText(textContent.value)
+        textCopied.value = true
+        
+        // Show different message for partial content
+        if (isPartialContent.value) {
+            showToast.value = true
+            setTimeout(() => {
+                showToast.value = false
+            }, 3000)
+        }
+        
+        setTimeout(() => {
+            textCopied.value = false
+        }, 2000)
+    } catch (err) {
+        console.error('Failed to copy text content:', err)
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B'
+    
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
 // SEO and meta data for better embeds
